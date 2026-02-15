@@ -5,6 +5,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Junte-se ao FinMemory - Qualificação</title>
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-K783HNBGE8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-K783HNBGE8');
+    </script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         * {
             margin: 0;
@@ -759,6 +772,12 @@
                 return;
             }
             
+            // Enviar evento para GA4
+            gtag('event', 'pergunta_respondida', {
+                'pergunta_numero': currentQuestion,
+                'resposta': JSON.stringify(answers[`q${currentQuestion}`])
+            });
+            
             // Esconde pergunta atual
             document.querySelector(`[data-question="${currentQuestion}"]`).classList.remove('active');
             
@@ -933,24 +952,64 @@
             }, 500);
         }
 
-        function sendToBackend(answers, score) {
-            // Aqui você integraria com seu backend
+        // Inicializar Supabase
+        const SUPABASE_URL = 'https://faxqrkxqfwjdavorxien.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZheHFya3hxZndqZGF2b3J4aWVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU4NTE4NTYsImV4cCI6MjA4MTQyNzg1Nn0.nXGv3FGwFJWWTRLwEgBRgOmj-RJu-pv7vvZYmyiO_3s';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function sendToBackend(answers, score) {
             const data = {
                 email: answers.q12?.email,
                 nome: answers.q12?.nome,
+                telefone: answers.q3,
                 score: score,
-                respostas: answers,
-                timestamp: new Date().toISOString()
+                
+                // Respostas individuais
+                q1_controle_atual: answers.q1,
+                q2_usa_gmail: answers.q2,
+                q3_recibos_email: answers.q3,
+                q4_dores: Array.isArray(answers.q4) ? answers.q4 : [],
+                q5_renda: answers.q5,
+                q6_objetivo: answers.q6,
+                q7_compras_online: answers.q7,
+                q8_disposicao_pagar: answers.q8,
+                q9_tecnologia: answers.q9,
+                q10_interesse_comparacao: parseInt(answers.q10) || 5,
+                q11_compartilhar_dados: answers.q11
             };
             
-            console.log('Enviando para backend:', data);
+            console.log('Enviando para Supabase:', data);
             
-            // Exemplo de integração:
-            // fetch('/api/qualificacao', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(data)
-            // });
+            try {
+                // Salvar no Supabase
+                const { data: result, error } = await supabaseClient
+                    .from('qualificacao_leads')
+                    .insert([data]);
+                
+                if (error) {
+                    console.error('Erro ao salvar no Supabase:', error);
+                } else {
+                    console.log('Salvo com sucesso no Supabase!', result);
+                }
+                
+                // Enviar evento para Google Analytics
+                gtag('event', 'formulario_completo', {
+                    'score': score,
+                    'email': answers.q12?.email,
+                    'value': score
+                });
+                
+                // Se for lead qualificado (score >= 100)
+                if (score >= 100) {
+                    gtag('event', 'lead_qualificado', {
+                        'score': score,
+                        'value': score
+                    });
+                }
+                
+            } catch (err) {
+                console.error('Erro geral:', err);
+            }
         }
 
         // Inicializa
@@ -958,4 +1017,3 @@
     </script>
 </body>
 </html>
-
