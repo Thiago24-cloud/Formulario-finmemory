@@ -1,107 +1,961 @@
-import React, { useState } from 'react';
-import Head from 'next/head';
 
-export default function Dashboard() {
-  // Estado para armazenar as transações que virão do Supabase no futuro
-  const [transacoes, setTransacoes] = useState([]);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Junte-se ao FinMemory - Qualificação</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  return (
-    <div style={{ 
-      fontFamily: '"Segoe UI", Roboto, Helvetica, Arial, sans-serif', 
-      backgroundColor: '#f0f2f5', 
-      minHeight: '100vh',
-      color: '#1c1e21'
-    }}>
-      <Head>
-        <title>FinMemory | Meu Financeiro Inteligente</title>
-      </Head>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
 
-      {/* Barra de Navegação Simples */}
-      <nav style={{ 
-        backgroundColor: '#fff', 
-        padding: '15px 30px', 
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h2 style={{ margin: 0, color: '#007bff' }}>🚀 FinMemory</h2>
-        <button style={{
-          backgroundColor: '#4285F4',
-          color: 'white',
-          border: 'none',
-          padding: '8px 16px',
-          borderRadius: '5px',
-          fontWeight: 'bold',
-          cursor: 'pointer'
-        }}>
-          Sair
-        </button>
-      </nav>
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
 
-      <main style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-        
-        {/* Card de Boas-vindas e Ação Principal */}
-        <section style={{ 
-          backgroundColor: '#fff', 
-          padding: '30px', 
-          borderRadius: '12px', 
-          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-          textAlign: 'center',
-          marginBottom: '30px'
-        }}>
-          <h1>Bem-vindo ao seu Financeiro</h1>
-          <p style={{ color: '#65676b', marginBottom: '25px' }}>
-            Nossa IA está pronta para ler seus e-mails e organizar seus gastos.
-          </p>
-          
-          <button 
-            onClick={() => window.location.href = '/api/auth/google'}
-            style={{
-              backgroundColor: '#34a853',
-              color: 'white',
-              border: 'none',
-              padding: '15px 30px',
-              borderRadius: '8px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              transition: 'transform 0.2s'
-            }}
-          >
-            🔌 Conectar Gmail agora
-          </button>
-        </section>
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
 
-        {/* Lista de Transações (Simulada para o MVP) */}
-        <section>
-          <h3 style={{ marginBottom: '15px' }}>Últimas Atividades</h3>
-          {transacoes.length === 0 ? (
-            <div style={{ 
-              backgroundColor: '#fff', 
-              padding: '40px', 
-              borderRadius: '12px', 
-              textAlign: 'center',
-              border: '2px dashed #ccd0d5'
-            }}>
-              <p style={{ color: '#8d949e' }}>
-                Nenhuma transação encontrada. <br/>
-                Conecte seu e-mail para começar a automação!
-              </p>
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            border-radius: 10px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: white;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: white;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            display: none;
+        }
+
+        .question-card.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .question-number {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .question-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .question-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .option.selected {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .option input[type="radio"],
+        .option input[type="checkbox"] {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .option label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .result-card {
+            display: none;
+            text-align: center;
+        }
+
+        .result-card.active {
+            display: block;
+        }
+
+        .result-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .result-description {
+            font-size: 16px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .result-score {
+            display: inline-block;
+            background: #f0f3ff;
+            color: #667eea;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .benefits-list {
+            text-align: left;
+            margin: 30px 0;
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 12px;
+        }
+
+        .benefits-list h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .benefit-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .benefit-item::before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .card {
+                padding: 25px;
+            }
+            
+            .question-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 FinMemory</h1>
+            <p>Descubra se o FinMemory é perfeito para você</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Pergunta 1 de 12</div>
+
+        <div class="card">
+            <!-- Pergunta 1: Controle Financeiro Atual -->
+            <div class="question-card active" data-question="1">
+                <div class="question-number">PERGUNTA 1 DE 12</div>
+                <div class="question-title">Como você controla seus gastos atualmente?</div>
+                <div class="question-subtitle">Queremos entender seus hábitos atuais</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '1', 'nao-controlo')">
+                        <input type="radio" name="q1" value="nao-controlo" id="q1-1">
+                        <label for="q1-1">Não controlo, só olho o saldo da conta</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '1', 'papel-mental')">
+                        <input type="radio" name="q1" value="papel-mental" id="q1-2">
+                        <label for="q1-2">Anoto no papel ou mentalmente</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '1', 'planilha')">
+                        <input type="radio" name="q1" value="planilha" id="q1-3">
+                        <label for="q1-3">Uso planilhas (Excel/Google Sheets)</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '1', 'app-basico')">
+                        <input type="radio" name="q1" value="app-basico" id="q1-4">
+                        <label for="q1-4">Uso apps financeiros básicos</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '1', 'app-completo')">
+                        <input type="radio" name="q1" value="app-completo" id="q1-5">
+                        <label for="q1-5">Uso apps completos (Mobills, Organizze, etc)</label>
+                    </div>
+                </div>
             </div>
-          ) : (
-            // Aqui entrará o mapeamento das transações reais do Supabase
-            <div style={{ backgroundColor: '#fff', borderRadius: '12px' }}>
-              {/* Exemplo de item de lista futura */}
+
+            <!-- Pergunta 2: Gmail -->
+            <div class="question-card" data-question="2">
+                <div class="question-number">PERGUNTA 2 DE 12</div>
+                <div class="question-title">Você usa Gmail como email principal?</div>
+                <div class="question-subtitle">Nosso sistema funciona melhor com Gmail</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '2', 'sim-principal')">
+                        <input type="radio" name="q2" value="sim-principal" id="q2-1">
+                        <label for="q2-1">Sim, é meu email principal</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '2', 'sim-secundario')">
+                        <input type="radio" name="q2" value="sim-secundario" id="q2-2">
+                        <label for="q2-2">Sim, mas uso como secundário</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '2', 'nao-mas-posso')">
+                        <input type="radio" name="q2" value="nao-mas-posso" id="q2-3">
+                        <label for="q2-3">Não, mas posso criar/usar um</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '2', 'nao-prefiro-outro')">
+                        <input type="radio" name="q2" value="nao-prefiro-outro" id="q2-4">
+                        <label for="q2-4">Não, prefiro usar outros emails</label>
+                    </div>
+                </div>
             </div>
-          )}
-        </section>
 
-      </main>
+            <!-- Pergunta 3: Recibos por Email -->
+            <div class="question-card" data-question="3">
+                <div class="question-number">PERGUNTA 3 DE 12</div>
+                <div class="question-title">Quantos recibos/notas fiscais você recebe por email por mês?</div>
+                <div class="question-subtitle">Isso nos ajuda a entender o volume de gastos que você gerencia</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '3', 'poucos')">
+                        <input type="radio" name="q3" value="poucos" id="q3-1">
+                        <label for="q3-1">Menos de 10 por mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '3', 'moderado')">
+                        <input type="radio" name="q3" value="moderado" id="q3-2">
+                        <label for="q3-2">Entre 10 e 30 por mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '3', 'muitos')">
+                        <input type="radio" name="q3" value="muitos" id="q3-3">
+                        <label for="q3-3">Mais de 30 por mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '3', 'nao-sei')">
+                        <input type="radio" name="q3" value="nao-sei" id="q3-4">
+                        <label for="q3-4">Não faço ideia, nunca contei</label>
+                    </div>
+                </div>
+            </div>
 
-      <footer style={{ textAlign: 'center', marginTop: '50px', paddingBottom: '30px', color: '#8d949e', fontSize: '14px' }}>
-        &copy; 2025 FinMemory - Inteligência Financeira Automática
-      </footer>
+            <!-- Pergunta 4: Principal Dor Financeira -->
+            <div class="question-card" data-question="4">
+                <div class="question-number">PERGUNTA 4 DE 12</div>
+                <div class="question-title">Qual sua maior dificuldade com dinheiro?</div>
+                <div class="question-subtitle">Pode escolher mais de uma opção</div>
+                <div class="options">
+                    <div class="option" onclick="selectMultiple(this, '4', 'nao-sei-onde-gasto')">
+                        <input type="checkbox" name="q4" value="nao-sei-onde-gasto" id="q4-1">
+                        <label for="q4-1">Não sei exatamente onde meu dinheiro vai</label>
+                    </div>
+                    <div class="option" onclick="selectMultiple(this, '4', 'esqueco-gastos')">
+                        <input type="checkbox" name="q4" value="esqueco-gastos" id="q4-2">
+                        <label for="q4-2">Esqueço de anotar meus gastos</label>
+                    </div>
+                    <div class="option" onclick="selectMultiple(this, '4', 'sem-tempo')">
+                        <input type="checkbox" name="q4" value="sem-tempo" id="q4-3">
+                        <label for="q4-3">Não tenho tempo para organizar finanças</label>
+                    </div>
+                    <div class="option" onclick="selectMultiple(this, '4', 'surpresas-fim-mes')">
+                        <input type="checkbox" name="q4" value="surpresas-fim-mes" id="q4-4">
+                        <label for="q4-4">Sempre tenho surpresas no fim do mês</label>
+                    </div>
+                    <div class="option" onclick="selectMultiple(this, '4', 'processo-chato')">
+                        <input type="checkbox" name="q4" value="processo-chato" id="q4-5">
+                        <label for="q4-5">Acho chato registrar tudo manualmente</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 5: Renda Mensal -->
+            <div class="question-card" data-question="5">
+                <div class="question-number">PERGUNTA 5 DE 12</div>
+                <div class="question-title">Qual sua faixa de renda mensal?</div>
+                <div class="question-subtitle">Essa informação é confidencial</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '5', 'ate-2k')">
+                        <input type="radio" name="q5" value="ate-2k" id="q5-1">
+                        <label for="q5-1">Até R$ 2.000</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '5', '2k-5k')">
+                        <input type="radio" name="q5" value="2k-5k" id="q5-2">
+                        <label for="q5-2">R$ 2.001 a R$ 5.000</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '5', '5k-10k')">
+                        <input type="radio" name="q5" value="5k-10k" id="q5-3">
+                        <label for="q5-3">R$ 5.001 a R$ 10.000</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '5', '10k-20k')">
+                        <input type="radio" name="q5" value="10k-20k" id="q5-4">
+                        <label for="q5-4">R$ 10.001 a R$ 20.000</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '5', 'acima-20k')">
+                        <input type="radio" name="q5" value="acima-20k" id="q5-5">
+                        <label for="q5-5">Acima de R$ 20.000</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 6: Objetivo Financeiro -->
+            <div class="question-card" data-question="6">
+                <div class="question-number">PERGUNTA 6 DE 12</div>
+                <div class="question-title">Qual seu principal objetivo financeiro agora?</div>
+                <div class="question-subtitle">Queremos te ajudar a chegar lá</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '6', 'organizar')">
+                        <input type="radio" name="q6" value="organizar" id="q6-1">
+                        <label for="q6-1">Organizar minhas finanças</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '6', 'economizar')">
+                        <input type="radio" name="q6" value="economizar" id="q6-2">
+                        <label for="q6-2">Economizar dinheiro todo mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '6', 'sair-dividas')">
+                        <input type="radio" name="q6" value="sair-dividas" id="q6-3">
+                        <label for="q6-3">Sair das dívidas</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '6', 'reserva')">
+                        <input type="radio" name="q6" value="reserva" id="q6-4">
+                        <label for="q6-4">Criar uma reserva de emergência</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '6', 'investir')">
+                        <input type="radio" name="q6" value="investir" id="q6-5">
+                        <label for="q6-5">Começar a investir</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 7: Compras Online -->
+            <div class="question-card" data-question="7">
+                <div class="question-number">PERGUNTA 7 DE 12</div>
+                <div class="question-title">Com que frequência você compra online?</div>
+                <div class="question-subtitle">Compras online sempre geram recibos por email</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '7', 'raramente')">
+                        <input type="radio" name="q7" value="raramente" id="q7-1">
+                        <label for="q7-1">Raramente ou nunca</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '7', 'mensal')">
+                        <input type="radio" name="q7" value="mensal" id="q7-2">
+                        <label for="q7-2">1-2 vezes por mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '7', 'semanal')">
+                        <input type="radio" name="q7" value="semanal" id="q7-3">
+                        <label for="q7-3">1-2 vezes por semana</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '7', 'frequente')">
+                        <input type="radio" name="q7" value="frequente" id="q7-4">
+                        <label for="q7-4">3 ou mais vezes por semana</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 8: Disposição para Pagar -->
+            <div class="question-card" data-question="8">
+                <div class="question-number">PERGUNTA 8 DE 12</div>
+                <div class="question-title">Quanto você pagaria por um app que organizasse suas finanças automaticamente?</div>
+                <div class="question-subtitle">Considerando que ele economiza horas do seu tempo</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '8', 'gratis')">
+                        <input type="radio" name="q8" value="gratis" id="q8-1">
+                        <label for="q8-1">Só usaria se fosse grátis</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '8', 'ate-10')">
+                        <input type="radio" name="q8" value="ate-10" id="q8-2">
+                        <label for="q8-2">Até R$ 10/mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '8', 'ate-20')">
+                        <input type="radio" name="q8" value="ate-20" id="q8-3">
+                        <label for="q8-3">Até R$ 20/mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '8', 'ate-30')">
+                        <input type="radio" name="q8" value="ate-30" id="q8-4">
+                        <label for="q8-4">Até R$ 30/mês</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '8', 'acima-30')">
+                        <input type="radio" name="q8" value="acima-30" id="q8-5">
+                        <label for="q8-5">Acima de R$ 30/mês se valer a pena</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 9: Tecnologia -->
+            <div class="question-card" data-question="9">
+                <div class="question-number">PERGUNTA 9 DE 12</div>
+                <div class="question-title">Como você se considera em relação à tecnologia?</div>
+                <div class="question-subtitle">Seja honesto, não tem resposta certa!</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '9', 'iniciante')">
+                        <input type="radio" name="q9" value="iniciante" id="q9-1">
+                        <label for="q9-1">Iniciante - preciso de ajuda com apps novos</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '9', 'intermediario')">
+                        <input type="radio" name="q9" value="intermediario" id="q9-2">
+                        <label for="q9-2">Intermediário - uso bem apps comuns</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '9', 'avancado')">
+                        <input type="radio" name="q9" value="avancado" id="q9-3">
+                        <label for="q9-3">Avançado - adoro testar apps novos</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '9', 'expert')">
+                        <input type="radio" name="q9" value="expert" id="q9-4">
+                        <label for="q9-4">Expert - trabalho com tecnologia</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 10: Interesse em Comparação de Preços -->
+            <div class="question-card" data-question="10">
+                <div class="question-number">PERGUNTA 10 DE 12</div>
+                <div class="question-title">Você gostaria de saber onde produtos estão mais baratos?</div>
+                <div class="question-subtitle">Imagine um "Waze dos Preços" mostrando o melhor lugar pra comprar</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="10" value="5" class="slider" id="q10-slider" oninput="updateSlider(10)">
+                    <div class="slider-labels">
+                        <span>Não me interessa</span>
+                        <span>Super interessado!</span>
+                    </div>
+                    <div class="slider-value" id="q10-value">5/10</div>
+                </div>
+            </div>
+
+            <!-- Pergunta 11: Compartilhar Dados -->
+            <div class="question-card" data-question="11">
+                <div class="question-number">PERGUNTA 11 DE 12</div>
+                <div class="question-title">Compartilharia anonimamente onde comprou produtos para ajudar outras pessoas?</div>
+                <div class="question-subtitle">Seus dados pessoais nunca seriam expostos, apenas os preços e locais</div>
+                <div class="options">
+                    <div class="option" onclick="selectOption(this, '11', 'sim-sempre')">
+                        <input type="radio" name="q11" value="sim-sempre" id="q11-1">
+                        <label for="q11-1">Sim, sempre! Adoro colaborar</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '11', 'sim-se-anonimo')">
+                        <input type="radio" name="q11" value="sim-se-anonimo" id="q11-2">
+                        <label for="q11-2">Sim, se for 100% anônimo</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '11', 'talvez')">
+                        <input type="radio" name="q11" value="talvez" id="q11-3">
+                        <label for="q11-3">Talvez, dependendo de como funciona</label>
+                    </div>
+                    <div class="option" onclick="selectOption(this, '11', 'nao')">
+                        <input type="radio" name="q11" value="nao" id="q11-4">
+                        <label for="q11-4">Não, prefiro manter privado</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta 12: Email para contato -->
+            <div class="question-card" data-question="12">
+                <div class="question-number">PERGUNTA 12 DE 12</div>
+                <div class="question-title">Último passo! Qual seu melhor email?</div>
+                <div class="question-subtitle">Vamos te enviar o resultado e informações exclusivas sobre o FinMemory</div>
+                <input type="email" class="text-input" id="q12-email" placeholder="seu@email.com" onkeyup="enableNext(12)">
+                <div style="margin-top: 15px;">
+                    <input type="text" class="text-input" id="q12-nome" placeholder="Seu nome (opcional)" style="margin-top: 10px;">
+                </div>
+            </div>
+
+            <!-- Resultado -->
+            <div class="result-card" id="resultCard">
+                <div class="result-icon" id="resultIcon">🎯</div>
+                <div class="result-title" id="resultTitle">Calculando seu perfil...</div>
+                <div class="result-score" id="resultScore">Carregando...</div>
+                <div class="result-description" id="resultDescription">Aguarde um momento...</div>
+                <div class="benefits-list" id="benefitsList" style="display: none;">
+                    <h3>O FinMemory é perfeito para você porque:</h3>
+                    <div class="benefit-item">Organiza suas finanças automaticamente</div>
+                    <div class="benefit-item">Extrai dados dos seus emails do Gmail</div>
+                    <div class="benefit-item">Economiza horas de trabalho manual</div>
+                    <div class="benefit-item">Mostra onde você pode economizar</div>
+                </div>
+                <a href="#" class="cta-button" id="ctaButton" style="display: none;">Quero começar agora!</a>
+            </div>
+        </div>
+
+        <div class="buttons" id="navigationButtons">
+            <button class="btn btn-secondary" id="prevBtn" onclick="previousQuestion()" style="display: none;">Voltar</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Próxima</button>
+        </div>
     </div>
-  );
-}
+
+    <script>
+        let currentQuestion = 1;
+        const totalQuestions = 12;
+        let answers = {};
+
+        function updateProgress() {
+            const progress = (currentQuestion / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `Pergunta ${currentQuestion} de ${totalQuestions}`;
+        }
+
+        function selectOption(element, question, value) {
+            // Remove selected de todas as opções da pergunta
+            const options = element.parentElement.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Adiciona selected na opção clicada
+            element.classList.add('selected');
+            
+            // Marca o radio
+            element.querySelector('input').checked = true;
+            
+            // Salva a resposta
+            answers[`q${question}`] = value;
+            
+            // Habilita o botão de próxima
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function selectMultiple(element, question, value) {
+            element.classList.toggle('selected');
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            
+            // Salva múltiplas respostas
+            if (!answers[`q${question}`]) {
+                answers[`q${question}`] = [];
+            }
+            
+            if (checkbox.checked) {
+                answers[`q${question}`].push(value);
+            } else {
+                answers[`q${question}`] = answers[`q${question}`].filter(v => v !== value);
+            }
+            
+            // Habilita o botão se houver pelo menos uma seleção
+            document.getElementById('nextBtn').disabled = answers[`q${question}`].length === 0;
+        }
+
+        function updateSlider(question) {
+            const slider = document.getElementById(`q${question}-slider`);
+            const value = slider.value;
+            document.getElementById(`q${question}-value`).textContent = `${value}/10`;
+            answers[`q${question}`] = value;
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function enableNext(question) {
+            const email = document.getElementById('q12-email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            document.getElementById('nextBtn').disabled = !emailRegex.test(email);
+            
+            if (emailRegex.test(email)) {
+                answers.q12 = {
+                    email: email,
+                    nome: document.getElementById('q12-nome').value
+                };
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestion === totalQuestions) {
+                showResult();
+                return;
+            }
+            
+            // Esconde pergunta atual
+            document.querySelector(`[data-question="${currentQuestion}"]`).classList.remove('active');
+            
+            // Incrementa
+            currentQuestion++;
+            
+            // Mostra próxima pergunta
+            document.querySelector(`[data-question="${currentQuestion}"]`).classList.add('active');
+            
+            // Atualiza progresso
+            updateProgress();
+            
+            // Mostra botão voltar
+            document.getElementById('prevBtn').style.display = 'block';
+            
+            // Desabilita próximo até nova seleção
+            if (!answers[`q${currentQuestion}`] || (Array.isArray(answers[`q${currentQuestion}`]) && answers[`q${currentQuestion}`].length === 0)) {
+                document.getElementById('nextBtn').disabled = true;
+            } else {
+                document.getElementById('nextBtn').disabled = false;
+            }
+            
+            // Muda texto do botão na última pergunta
+            if (currentQuestion === totalQuestions) {
+                document.getElementById('nextBtn').textContent = 'Ver Resultado';
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion === 1) return;
+            
+            // Esconde pergunta atual
+            document.querySelector(`[data-question="${currentQuestion}"]`).classList.remove('active');
+            
+            // Decrementa
+            currentQuestion--;
+            
+            // Mostra pergunta anterior
+            document.querySelector(`[data-question="${currentQuestion}"]`).classList.add('active');
+            
+            // Atualiza progresso
+            updateProgress();
+            
+            // Esconde botão voltar se for primeira pergunta
+            if (currentQuestion === 1) {
+                document.getElementById('prevBtn').style.display = 'none';
+            }
+            
+            // Habilita próximo pois já respondeu
+            document.getElementById('nextBtn').disabled = false;
+            document.getElementById('nextBtn').textContent = 'Próxima';
+        }
+
+        function calculateScore() {
+            let score = 0;
+            
+            // Pontuação por resposta (cliente ideal = maior pontuação)
+            
+            // Q1 - Controle atual
+            if (answers.q1 === 'nao-controlo') score += 30;
+            else if (answers.q1 === 'papel-mental') score += 25;
+            else if (answers.q1 === 'planilha') score += 20;
+            else if (answers.q1 === 'app-basico') score += 15;
+            else if (answers.q1 === 'app-completo') score += 5;
+            
+            // Q2 - Gmail
+            if (answers.q2 === 'sim-principal') score += 25;
+            else if (answers.q2 === 'sim-secundario') score += 20;
+            else if (answers.q2 === 'nao-mas-posso') score += 10;
+            else score += 0;
+            
+            // Q3 - Recibos por email
+            if (answers.q3 === 'muitos') score += 25;
+            else if (answers.q3 === 'moderado') score += 20;
+            else if (answers.q3 === 'poucos') score += 10;
+            else if (answers.q3 === 'nao-sei') score += 15;
+            
+            // Q4 - Dores (cada dor soma)
+            if (answers.q4) {
+                score += answers.q4.length * 4;
+            }
+            
+            // Q5 - Renda
+            if (answers.q5 === '2k-5k' || answers.q5 === '5k-10k') score += 15;
+            else if (answers.q5 === '10k-20k') score += 10;
+            else if (answers.q5 === 'acima-20k') score += 5;
+            else score += 8;
+            
+            // Q7 - Compras online
+            if (answers.q7 === 'frequente') score += 15;
+            else if (answers.q7 === 'semanal') score += 12;
+            else if (answers.q7 === 'mensal') score += 8;
+            else score += 3;
+            
+            // Q8 - Disposição para pagar
+            if (answers.q8 === 'ate-20') score += 15;
+            else if (answers.q8 === 'ate-30' || answers.q8 === 'acima-30') score += 10;
+            else if (answers.q8 === 'ate-10') score += 8;
+            else score += 0;
+            
+            // Q9 - Tecnologia
+            if (answers.q9 === 'intermediario' || answers.q9 === 'avancado') score += 10;
+            else if (answers.q9 === 'expert') score += 8;
+            else score += 5;
+            
+            // Q10 - Interesse em comparação
+            score += parseInt(answers.q10) * 1.5;
+            
+            // Q11 - Compartilhar dados
+            if (answers.q11 === 'sim-sempre') score += 15;
+            else if (answers.q11 === 'sim-se-anonimo') score += 12;
+            else if (answers.q11 === 'talvez') score += 6;
+            else score += 0;
+            
+            return Math.round(score);
+        }
+
+        function showResult() {
+            // Esconde navegação e pergunta
+            document.getElementById('navigationButtons').style.display = 'none';
+            document.querySelector(`[data-question="${currentQuestion}"]`).classList.remove('active');
+            
+            // Calcula score
+            const score = calculateScore();
+            
+            // Salva dados no console (aqui você enviaria para seu backend)
+            console.log('Respostas completas:', answers);
+            console.log('Score:', score);
+            
+            // Mostra resultado
+            const resultCard = document.getElementById('resultCard');
+            resultCard.classList.add('active');
+            
+            // Determina categoria
+            let icon, title, description, cta;
+            
+            if (score >= 140) {
+                icon = '🎯';
+                title = 'VOCÊ É O CLIENTE IDEAL!';
+                description = `Com ${score} pontos, você é EXATAMENTE o perfil que o FinMemory foi criado para ajudar! Pessoas como você já economizam em média 8 horas por mês e R$ 450 usando nosso app.`;
+                cta = 'Começar AGORA com 30 dias grátis';
+                document.getElementById('benefitsList').style.display = 'block';
+            } else if (score >= 100) {
+                icon = '✅';
+                title = 'O FinMemory é perfeito para você!';
+                description = `Com ${score} pontos, você tem um perfil excelente para usar o FinMemory. Você vai adorar ter suas finanças organizadas automaticamente!`;
+                cta = 'Quero testar grátis por 30 dias';
+                document.getElementById('benefitsList').style.display = 'block';
+            } else if (score >= 70) {
+                icon = '💡';
+                title = 'O FinMemory pode te ajudar!';
+                description = `Com ${score} pontos, você pode se beneficiar do FinMemory, mas talvez precise de algumas adaptações. Vamos conversar sobre como podemos atender melhor suas necessidades!`;
+                cta = 'Quero saber mais';
+            } else {
+                icon = '📊';
+                title = 'Obrigado pelo interesse!';
+                description = `Com ${score} pontos, o FinMemory pode não ser a melhor solução para você no momento. Mas vamos te manter informado sobre nossas novidades e funcionalidades que podem se encaixar melhor no seu perfil!`;
+                cta = 'Manter contato';
+            }
+            
+            // Atualiza UI
+            setTimeout(() => {
+                document.getElementById('resultIcon').textContent = icon;
+                document.getElementById('resultTitle').textContent = title;
+                document.getElementById('resultScore').textContent = `Score: ${score} pontos`;
+                document.getElementById('resultDescription').textContent = description;
+                document.getElementById('ctaButton').textContent = cta;
+                document.getElementById('ctaButton').style.display = 'inline-block';
+                
+                // Aqui você enviaria os dados para seu backend/email
+                sendToBackend(answers, score);
+            }, 500);
+        }
+
+        function sendToBackend(answers, score) {
+            // Aqui você integraria com seu backend
+            const data = {
+                email: answers.q12?.email,
+                nome: answers.q12?.nome,
+                score: score,
+                respostas: answers,
+                timestamp: new Date().toISOString()
+            };
+            
+            console.log('Enviando para backend:', data);
+            
+            // Exemplo de integração:
+            // fetch('/api/qualificacao', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+        }
+
+        // Inicializa
+        updateProgress();
+    </script>
+</body>
+</html>
+
